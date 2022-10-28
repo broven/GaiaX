@@ -9,9 +9,13 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
 import com.alibaba.gaiax.GXRegisterCenter
 import com.alibaba.gaiax.GXTemplateEngine
+import com.alibaba.gaiax.demo.fastpreview.GXFastPreviewActivity
+import com.alibaba.gaiax.demo.fastpreview.GXQRCodeActivity
+import com.alibaba.gaiax.demo.source.GXFastPreviewSource
+import com.alibaba.gaiax.demo.source.GXManualPushSource
 import com.alibaba.gaiax.demo.utils.GXExtensionMultiVersionExpression
-import com.alibaba.gaiax.fastpreview.GaiaXFastPreviewActivity
-import com.alibaba.gaiax.fastpreview.GaiaXQRCodeActivity
+import com.alibaba.gaiax.studio.GXClientToStudio
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -20,10 +24,15 @@ class MainActivity : AppCompatActivity() {
             val scanResult =
                 it.data?.getStringExtra("SCAN_RESULT") ?: return@registerForActivityResult
             Log.d("MainActivity", "StartActivityForResult() called scanResult = $scanResult")
-            val intent = Intent(MainActivity@ this, GaiaXFastPreviewActivity::class.java)
-            intent.putExtra(GaiaXFastPreviewActivity.GAIA_STUDIO_URL, scanResult)
+            val intent = Intent(MainActivity@ this, GXFastPreviewActivity::class.java)
+            intent.putExtra(GXFastPreviewActivity.GAIA_STUDIO_URL, scanResult)
             startActivity(intent)
         }
+
+    override fun onDestroy() {
+        GXClientToStudio.instance.destroy()
+        super.onDestroy()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,10 +41,21 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(findViewById(R.id.toolbar))
 
         GXTemplateEngine.instance.init(this)
-        GXRegisterCenter.instance
-            .registerExtensionExpression(GXExtensionMultiVersionExpression())
 
-        // 注册IconFont字体的加载逻辑
+        GXClientToStudio.instance.init(applicationContext)
+
+        GXRegisterCenter.instance.registerExtensionExpression(GXExtensionMultiVersionExpression())
+
+        GXRegisterCenter.instance.registerExtensionException(object :
+            GXRegisterCenter.GXIExtensionException {
+            override fun exception(exception: Exception) {
+                exception.printStackTrace()
+            }
+        })
+
+        GXRegisterCenter.instance.registerExtensionTemplateSource(GXManualPushSource.instance, 101)
+            .registerExtensionTemplateSource(GXFastPreviewSource.instance, 102)
+
         GXRegisterCenter.instance.registerExtensionFontFamily(object :
             GXRegisterCenter.GXIExtensionFontFamily {
             override fun fontFamily(fontFamilyName: String): Typeface? {
@@ -47,17 +67,17 @@ class MainActivity : AppCompatActivity() {
         })
 
         findViewById<AppCompatButton>(R.id.fastpreview)?.setOnClickListener {
-            val intent = Intent(MainActivity@ this, GaiaXQRCodeActivity::class.java)
+            val intent = Intent(MainActivity@ this, GXQRCodeActivity::class.java)
             launcher.launch(intent)
         }
 
         findViewById<AppCompatButton>(R.id.fastpreview_emulator)?.setOnClickListener {
-            val intent = Intent(MainActivity@ this, GaiaXFastPreviewActivity::class.java)
+            val intent = Intent(MainActivity@ this, GXFastPreviewActivity::class.java)
             // 9001
             // 9292
             intent.putExtra(
                 "GAIA_STUDIO_URL",
-                "gaiax://gaiax/preview?url=ws://30.78.147.17:9292&id=test-template&type=auto"
+                "gaiax://gaiax/preview?url=ws://30.78.148.15:9001&id=test-template&type=auto"
             )
             launcher.launch(intent)
         }
@@ -93,7 +113,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         findViewById<AppCompatButton>(R.id.remote)?.setOnClickListener {
-            val intent = Intent(MainActivity@ this, RemoteDataSourceTemplateActivity::class.java)
+            val intent = Intent(this, RemoteDataSourceTemplateActivity::class.java)
+            startActivity(intent)
+        }
+        findViewById<AppCompatButton>(R.id.style)?.setOnClickListener {
+            val intent = Intent(MainActivity@ this, StyleTemplateActivity::class.java)
             startActivity(intent)
         }
     }

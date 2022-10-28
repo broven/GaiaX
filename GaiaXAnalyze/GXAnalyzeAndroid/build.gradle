@@ -6,9 +6,9 @@ allprojects {
     repositories {
         mavenLocal()
         google()
-        maven { url 'https://mvnrepository.com/artifact/com.github.gundy/semver4j'}
         maven { url "https://jitpack.io" }
         mavenCentral()
+        maven { url 'https://mvnrepository.com/artifact/com.github.gundy/semver4j'}
     }
 }
 
@@ -19,9 +19,9 @@ buildscript {
     repositories {
         mavenLocal()
         google()
-        maven { url 'https://mvnrepository.com/artifact/com.github.gundy/semver4j'}
         maven { url "https://jitpack.io" }
         mavenCentral()
+        maven { url 'https://mvnrepository.com/artifact/com.github.gundy/semver4j'}
     }
 
     dependencies {
@@ -80,6 +80,16 @@ android {
             version "3.10.2"
         }
     }
+    //过滤掉libc++_shared.so，不添加到APK中。
+    //当APK中已有libc++_shared.so，可以打开这段注释，减少包大小。
+//    packagingOptions {
+//        exclude 'lib/*/libc++_shared.so'
+//    }
+
+    // https://www.jianshu.com/p/681589927f1f
+    compileOptions {
+        kotlinOptions.freeCompilerArgs += ['-module-name', "GaiaX-Analyze"]
+    }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -108,7 +118,7 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib:1.5.31@jar"
     implementation 'com.alibaba:fastjson:1.2.26@jar'
-
+    implementation 'androidx.annotation:annotation:1.0.0'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit-ktx:1.1.3'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'

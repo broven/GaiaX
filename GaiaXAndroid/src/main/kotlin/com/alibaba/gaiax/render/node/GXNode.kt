@@ -22,7 +22,9 @@ import app.visly.stretch.Layout
 import com.alibaba.gaiax.GXRegisterCenter
 import com.alibaba.gaiax.GXTemplateEngine
 import com.alibaba.gaiax.context.GXTemplateContext
+import com.alibaba.gaiax.render.view.GXIRelease
 import com.alibaba.gaiax.template.GXLayer
+import com.alibaba.gaiax.template.GXTemplateKey
 
 /**
  * @suppress
@@ -79,6 +81,11 @@ class GXNode {
     var boxLayoutView: View? = null
 
     /**
+     * 节点上覆盖的lottieView
+     */
+    var lottieView: View? = null
+
+    /**
      * 节点的模板数据
      */
     lateinit var templateNode: GXTemplateNode
@@ -122,6 +129,9 @@ class GXNode {
     fun release() {
         isAnimating = false
         idPath = ""
+        if (view is GXIRelease) {
+            (view as GXIRelease).release()
+        }
         view = null
         boxLayoutView = null
         stretchNode.free()
@@ -162,6 +172,10 @@ class GXNode {
 
     fun isNeedShadow(): Boolean {
         return (isViewType() || isImageType()) && templateNode.css.style.boxShadow != null
+    }
+
+    fun isNeedLottie(): Boolean {
+        return templateNode.animationBinding?.type?.equals(GXTemplateKey.GAIAX_ANIMATION_TYPE_LOTTIE,true) == true
     }
 
     fun setIdPath(parent: GXNode?, layer: GXLayer) {
