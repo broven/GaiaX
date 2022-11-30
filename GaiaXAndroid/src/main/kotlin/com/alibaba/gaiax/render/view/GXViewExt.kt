@@ -20,7 +20,6 @@ import android.graphics.Color
 import android.graphics.Rect
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
-import android.os.Build
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
@@ -34,11 +33,11 @@ import com.alibaba.gaiax.context.GXTemplateContext
 import com.alibaba.gaiax.render.view.basic.*
 import com.alibaba.gaiax.render.view.container.GXContainer
 import com.alibaba.gaiax.render.view.container.GXContainerViewAdapter
+import com.alibaba.gaiax.render.view.container.slider.GXSliderView
 import com.alibaba.gaiax.render.view.drawable.GXBlurBitmapDrawable
 import com.alibaba.gaiax.render.view.drawable.GXColorGradientDrawable
 import com.alibaba.gaiax.render.view.drawable.GXLinearColorGradientDrawable
 import com.alibaba.gaiax.template.*
-import jp.wasabeef.blurry.Blurry
 
 /**
  * @suppress
@@ -104,6 +103,16 @@ fun View.setRoundCornerRadiusAndRoundCornerBorder(style: GXStyle?) {
                     borderRadius ?: FloatArray(8) { 0F })
             }
         } else if (this is GXContainer) {
+            if (cornerRadius != null) {
+                this.setRoundCornerRadius(cornerRadius)
+            }
+            if (borderColor != null && borderWidth != null) {
+                this.setRoundCornerBorder(
+                    borderColor,
+                    borderWidth,
+                    borderRadius ?: FloatArray(8) { 0F })
+            }
+        } else if (this is GXSliderView) {
             if (cornerRadius != null) {
                 this.setRoundCornerRadius(cornerRadius)
             }
@@ -204,17 +213,19 @@ fun View.setBackgroundColorAndBackgroundImageWithRadius(style: GXStyle?) {
         }
     } else if (style?.backgroundColor != null) {
         val drawable = GXColorGradientDrawable(
-            GradientDrawable.Orientation.LEFT_RIGHT,
-            intArrayOf(
-                style.backgroundColor.value(this.context),
-                style.backgroundColor.value(this.context)
+            GradientDrawable.Orientation.LEFT_RIGHT, intArrayOf(
+                style.backgroundColor.value(this.context), style.backgroundColor.value(this.context)
             )
         )
         // Use left and right gradients to simulate solid colors
         // Convenient for rounded corner cutting
         this.background = drawable
     } else {
-        this.background = null
+        if (this.background is GXBlurBitmapDrawable) {
+            // fix: rebind data cause background flicker
+        } else {
+            this.background = null
+        }
     }
 
     if (background is GXColorGradientDrawable || background is GXLinearColorGradientDrawable) {
@@ -238,20 +249,14 @@ fun GXText.setFontTextLineHeight(style: GXStyle) {
     if (style.fontLineHeight != null) {
         val lineHeight = style.fontLineHeight.valueFloat
 
-        GXRegisterCenter
-            .instance
-            .extensionDynamicProperty
-            ?.convert(
-                GXRegisterCenter.GXIExtensionDynamicProperty.GXParams(
-                    GXTemplateKey.STYLE_FONT_LINE_HEIGHT,
-                    lineHeight
-                ).apply {
-                    this.cssStyle = style
-                })
-            ?.let {
-                this.setTextLineHeight(it as Float)
-                return
-            }
+        GXRegisterCenter.instance.extensionDynamicProperty?.convert(GXRegisterCenter.GXIExtensionDynamicProperty.GXParams(
+            GXTemplateKey.STYLE_FONT_LINE_HEIGHT, lineHeight
+        ).apply {
+            this.cssStyle = style
+        })?.let {
+            this.setTextLineHeight(it as Float)
+            return
+        }
 
         this.setTextLineHeight(lineHeight)
     }
@@ -400,9 +405,7 @@ fun View.setDisplay(visibility: Int?) {
  * @suppress
  */
 fun View.setGridContainerDirection(
-    context: GXTemplateContext,
-    config: GXGridConfig,
-    layout: Layout?
+    context: GXTemplateContext, config: GXGridConfig, layout: Layout?
 ) {
     val direction: Int = config.direction
     val column: Int = config.column(context)
@@ -413,17 +416,16 @@ fun View.setGridContainerDirection(
                 ?: false
         if (this.layoutManager == null || needForceRefresh) {
             this.layoutManager = null
-            val target =
-                object : GridLayoutManager(this.context, column, direction, false) {
-                    override fun canScrollHorizontally(): Boolean {
-                        // TODO: Grid横向处理不支持，此种情况暂时不做处理，很少见
-                        return false
-                    }
-
-                    override fun canScrollVertically(): Boolean {
-                        return direction == LinearLayoutManager.VERTICAL && scrollEnable
-                    }
+            val target = object : GridLayoutManager(this.context, column, direction, false) {
+                override fun canScrollHorizontally(): Boolean {
+                    // TODO: Grid横向处理不支持，此种情况暂时不做处理，很少见
+                    return false
                 }
+
+                override fun canScrollVertically(): Boolean {
+                    return direction == LinearLayoutManager.VERTICAL && scrollEnable
+                }
+            }
             this.layoutManager = target
         } else {
             (this.layoutManager as GridLayoutManager).spanCount = column
@@ -442,9 +444,7 @@ fun View.setScrollContainerDirection(direction: Int, layout: Layout?) {
         if (this.layoutManager == null || needForceRefresh) {
             this.layoutManager = null
             val target = LinearLayoutManager(
-                this.context,
-                direction,
-                false
+                this.context, direction, false
             )
             this.layoutManager = target
         }
@@ -464,9 +464,7 @@ fun View.setScrollContainerPadding(padding: Rect) {
  * @suppress
  */
 fun View.setGridContainerItemSpacingAndRowSpacing(
-    padding: Rect,
-    itemSpacing: Int,
-    rowSpacing: Int
+    padding: Rect, itemSpacing: Int, rowSpacing: Int
 ) {
     if (this is RecyclerView) {
         if (this.itemDecorationCount > 0) {
@@ -475,10 +473,7 @@ fun View.setGridContainerItemSpacingAndRowSpacing(
         val decoration = object : RecyclerView.ItemDecoration() {
 
             override fun getItemOffsets(
-                outRect: Rect,
-                view: View,
-                parent: RecyclerView,
-                state: RecyclerView.State
+                outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State
             ) {
                 super.getItemOffsets(outRect, view, parent, state)
 
@@ -531,8 +526,8 @@ fun View.setGridContainerItemSpacingAndRowSpacing(
                 val left: Float
                 val right: Float
 
-                val totalSpace: Float = itemSpacing * (spanCount - 1) +
-                        (padding.left.toFloat() + padding.right.toFloat()) // 总共的padding值
+                val totalSpace: Float =
+                    itemSpacing * (spanCount - 1) + (padding.left.toFloat() + padding.right.toFloat()) // 总共的padding值
                 val eachSpace = totalSpace / spanCount // 分配给每个item的padding值
                 val column = childPosition % spanCount // 列数
 
@@ -547,8 +542,8 @@ fun View.setGridContainerItemSpacingAndRowSpacing(
                         left = padding.left.toFloat()
                         right = padding.right.toFloat()
                     } else {
-                        left = column * (eachSpace - padding.left - padding.right) /
-                                (spanCount - 1) + (padding.left + padding.right) / 2
+                        left =
+                            column * (eachSpace - padding.left - padding.right) / (spanCount - 1) + (padding.left + padding.right) / 2
                         right = eachSpace - left
                     }
                 }
@@ -677,10 +672,7 @@ fun View.setVerticalScrollContainerLineSpacing(lineSpacing: Int) {
         }
         val decoration = object : RecyclerView.ItemDecoration() {
             override fun getItemOffsets(
-                outRect: Rect,
-                view: View,
-                parent: RecyclerView,
-                state: RecyclerView.State
+                outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State
             ) {
                 super.getItemOffsets(outRect, view, parent, state)
                 if (parent.adapter != null) {
@@ -705,10 +697,7 @@ fun View.setHorizontalScrollContainerLineSpacing(lineSpacing: Int) {
         }
         val decoration = object : RecyclerView.ItemDecoration() {
             override fun getItemOffsets(
-                outRect: Rect,
-                view: View,
-                parent: RecyclerView,
-                state: RecyclerView.State
+                outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State
             ) {
                 super.getItemOffsets(outRect, view, parent, state)
                 if (parent.adapter != null) {
@@ -733,10 +722,7 @@ fun View.setHorizontalScrollContainerLineSpacing(left: Int, right: Int, lineSpac
         }
         val decoration = object : RecyclerView.ItemDecoration() {
             override fun getItemOffsets(
-                outRect: Rect,
-                view: View,
-                parent: RecyclerView,
-                state: RecyclerView.State
+                outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State
             ) {
                 super.getItemOffsets(outRect, view, parent, state)
                 if (parent.adapter != null) {

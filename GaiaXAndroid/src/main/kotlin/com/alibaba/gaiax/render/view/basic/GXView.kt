@@ -31,15 +31,14 @@ import android.widget.AbsoluteLayout
 import androidx.annotation.Keep
 import androidx.annotation.RequiresApi
 import com.alibaba.fastjson.JSONObject
-import com.alibaba.gaiax.GXRegisterCenter
 import com.alibaba.gaiax.context.GXTemplateContext
+import com.alibaba.gaiax.render.utils.GXAccessibilityUtils
 import com.alibaba.gaiax.render.view.GXIRootView
 import com.alibaba.gaiax.render.view.GXIRoundCorner
 import com.alibaba.gaiax.render.view.GXIViewBindData
 import com.alibaba.gaiax.render.view.drawable.GXBlurBitmapDrawable
 import com.alibaba.gaiax.render.view.drawable.GXRoundCornerBorderGradientDrawable
 import com.alibaba.gaiax.template.GXBackdropFilter
-import com.alibaba.gaiax.template.GXTemplateKey
 import jp.wasabeef.blurry.Blurry
 import kotlin.math.roundToInt
 
@@ -47,19 +46,14 @@ import kotlin.math.roundToInt
  * @suppress
  */
 @Keep
-open class GXView : AbsoluteLayout,
-    GXIViewBindData,
-    GXIRootView,
-    GXIRoundCorner {
+open class GXView : AbsoluteLayout, GXIViewBindData, GXIRootView, GXIRoundCorner {
 
     constructor(context: Context) : super(context)
 
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
 
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(
-        context,
-        attrs,
-        defStyleAttr
+        context, attrs, defStyleAttr
     )
 
     private var gxBackdropFilter: GXBackdropFilter? = null
@@ -75,29 +69,7 @@ open class GXView : AbsoluteLayout,
     }
 
     override fun onBindData(data: JSONObject?) {
-        try {
-            // 原有无障碍逻辑
-            val accessibilityDesc = data?.getString(GXTemplateKey.GAIAX_ACCESSIBILITY_DESC)
-            if (accessibilityDesc != null && accessibilityDesc.isNotEmpty()) {
-                contentDescription = accessibilityDesc
-                importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_YES
-            } else {
-                importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
-            }
-
-            // 新增无障碍Enable逻辑
-            data?.getBoolean(GXTemplateKey.GAIAX_ACCESSIBILITY_ENABLE)?.let { enable ->
-                importantForAccessibility = if (enable) {
-                    View.IMPORTANT_FOR_ACCESSIBILITY_YES
-                } else {
-                    View.IMPORTANT_FOR_ACCESSIBILITY_NO
-                }
-            }
-        } catch (e: Exception) {
-            if (GXRegisterCenter.instance.extensionCompatibility?.isPreventAccessibilityThrowException() == false) {
-                throw e
-            }
-        }
+        GXAccessibilityUtils.accessibilityOfView(this, data)
     }
 
     override fun setRoundCornerRadius(radius: FloatArray) {
@@ -106,8 +78,8 @@ open class GXView : AbsoluteLayout,
             val tr = radius[2]
             val bl = radius[4]
             val br = radius[6]
-            if (tl == tr && tr == bl && bl == br && tl > 0) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                if (tl == tr && tr == bl && bl == br && tl > 0) {
                     this.clipToOutline = true
                     this.outlineProvider = object : ViewOutlineProvider() {
                         override fun getOutline(view: View, outline: Outline) {
@@ -117,6 +89,9 @@ open class GXView : AbsoluteLayout,
                             outline.setRoundRect(0, 0, view.width, view.height, tl)
                         }
                     }
+                } else {
+                    this.clipToOutline = false
+                    this.outlineProvider = null
                 }
             }
         }
@@ -142,7 +117,7 @@ open class GXView : AbsoluteLayout,
         }
     }
 
-    fun onBlurChanged(gxTemplateContext: GXTemplateContext, gxImageView: GXImageView) {
+    fun onBlurChanged(gxTemplateContext: GXTemplateContext, gxImageView: View) {
         val target = this
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             val rootView = gxTemplateContext.rootView as? ViewGroup
@@ -159,12 +134,13 @@ open class GXView : AbsoluteLayout,
                 if (imageOffsetViewBounds.contains(targetOffsetViewBounds)) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                         if (target.isAttachedToWindow) {
-                            blur(rootView, targetOffsetViewBounds, target)
+                            blur(gxImageView, targetOffsetViewBounds, target)
                             return
+                        } else {
+                            target.post {
+                                blur(gxImageView, targetOffsetViewBounds, target)
+                            }
                         }
-                    }
-                    target.post {
-                        blur(rootView, targetOffsetViewBounds, target)
                     }
                 }
             }
@@ -173,17 +149,10 @@ open class GXView : AbsoluteLayout,
 
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     private fun blur(
-        rootView: ViewGroup,
-        offsetViewBounds: Rect,
-        target: GXView
+        srcView: View, offsetViewBounds: Rect, target: GXView
     ) {
-        Blurry.with(target.context)
-            .radius(25)
-            .sampling(8)
-            .captureAcquireRect(offsetViewBounds)
-            .color(Color.parseColor("#33FFFFFF"))
-            .capture(rootView)
-            .getAsync {
+        Blurry.with(target.context).radius(25).sampling(12).captureTargetRect(offsetViewBounds)
+            .color(Color.parseColor("#70FFFFFF")).capture(srcView).getAsync {
                 // TODO 有过有异形圆角会有问题
                 if (it != null) {
                     target.background = GXBlurBitmapDrawable(resources, it)
@@ -192,8 +161,7 @@ open class GXView : AbsoluteLayout,
     }
 
     fun setBackdropFilter(
-        gxTemplateContext: GXTemplateContext,
-        gxBackdropFilter: GXBackdropFilter?
+        gxTemplateContext: GXTemplateContext, gxBackdropFilter: GXBackdropFilter?
     ) {
         // TODO View高斯模糊和图片渲染有直接关系
         // 如果设置了高斯模糊，但是组件中没有图片，高斯模糊的逻辑也不会执行

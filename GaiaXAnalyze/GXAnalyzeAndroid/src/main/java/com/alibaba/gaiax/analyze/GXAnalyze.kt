@@ -1,6 +1,7 @@
 package com.alibaba.gaiax.analyze
 
 import androidx.annotation.Keep
+import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
 
 @Keep
@@ -40,7 +41,7 @@ class GXAnalyze {
         external fun getValueFloat(value: Long): Float
         external fun getValueArray(value: Long): Any?
         external fun getValueMap(value: Long): Any?
-        external fun getValueLong(value: Long):Long
+        external fun getValueLong(value: Long): Long
         external fun createValueFloat64(value: Float): Long
         external fun createValueString(value: String): Long
         external fun createValueBool(value: Boolean): Long
@@ -88,11 +89,11 @@ class GXAnalyze {
             is String -> {
                 if (expression.trim() == "\$\$") {
                     return data
-                }else if(expression.trim() == ""){
+                } else if (expression.trim() == "") {
                     return null
                 }
-                val result = this.getResultNative(this, expression, data);
-                return wrapAsGXValue(result)?.getValue();
+                val result = this.getResultNative(this, expression, data)
+                return wrapAsGXValue(result)?.getValue()
             }
             is Int -> {
                 return expression
@@ -108,6 +109,13 @@ class GXAnalyze {
             }
             is JSONObject -> {
                 return getJsonResult(expression, data)
+            }
+            is JSONArray -> {
+                return JSONArray().apply {
+                    for (jsonObject in expression) {
+                        add(getResult(jsonObject, data))
+                    }
+                }
             }
             else -> return null
         }

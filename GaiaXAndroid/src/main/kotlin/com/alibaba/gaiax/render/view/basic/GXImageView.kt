@@ -29,8 +29,8 @@ import androidx.annotation.Keep
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.content.res.ResourcesCompat
 import com.alibaba.fastjson.JSONObject
-import com.alibaba.gaiax.GXRegisterCenter
 import com.alibaba.gaiax.context.GXTemplateContext
+import com.alibaba.gaiax.render.utils.GXAccessibilityUtils
 import com.alibaba.gaiax.render.view.GXIRelease
 import com.alibaba.gaiax.render.view.GXRoundBorderDelegate
 import com.alibaba.gaiax.template.GXCss
@@ -48,9 +48,7 @@ open class GXImageView : AppCompatImageView, GXIImageView, GXIRelease {
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
 
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(
-        context,
-        attrs,
-        defStyleAttr
+        context, attrs, defStyleAttr
     )
 
     companion object {
@@ -134,32 +132,8 @@ open class GXImageView : AppCompatImageView, GXIImageView, GXIRelease {
     }
 
     open fun bindDesc(data: JSONObject?) {
-        try {
-            // 原有无障碍逻辑
-            val accessibilityDesc = data?.getString(GXTemplateKey.GAIAX_ACCESSIBILITY_DESC)
-            if (accessibilityDesc != null && accessibilityDesc.isNotEmpty()) {
-                this.contentDescription = accessibilityDesc
-                this.importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_YES
-            } else {
-                this.importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
-            }
-
-            // 新增Enable逻辑
-            data?.getBoolean(GXTemplateKey.GAIAX_ACCESSIBILITY_ENABLE)?.let { enable ->
-                if (enable) {
-                    this.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
-                    if (accessibilityDesc == null || accessibilityDesc.isEmpty()) {
-                        this.contentDescription = "图片"
-                    }
-                } else {
-                    this.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-                }
-            }
-        } catch (e: Exception) {
-            if (GXRegisterCenter.instance.extensionCompatibility?.isPreventAccessibilityThrowException() == false) {
-                throw e
-            }
-        }
+        val view = this
+        GXAccessibilityUtils.accessibilityOfImage(view, data)
     }
 
     private var delegate: GXRoundBorderDelegate? = null
@@ -181,7 +155,7 @@ open class GXImageView : AppCompatImageView, GXIImageView, GXIRelease {
     }
 
     interface GXImageViewListener {
-        fun onDrawableChanged(gxImageView: GXImageView)
+        fun onDrawableChanged(gxImageView: View)
     }
 
     var onImageDrawableListener: GXImageViewListener? = null
@@ -190,7 +164,7 @@ open class GXImageView : AppCompatImageView, GXIImageView, GXIRelease {
         super.setImageDrawable(drawable)
         if (onImageDrawableListener != null && drawable is BitmapDrawable) {
             this.post {
-                onImageDrawableListener?.onDrawableChanged(this@GXImageView)
+                onImageDrawableListener?.onDrawableChanged(this)
             }
         }
     }
@@ -243,10 +217,7 @@ open class GXImageView : AppCompatImageView, GXIImageView, GXIRelease {
     }
 
     fun setRoundCornerRadius(
-        topLeft: Float,
-        topRight: Float,
-        bottomLeft: Float,
-        bottomRight: Float
+        topLeft: Float, topRight: Float, bottomLeft: Float, bottomRight: Float
     ) {
         if (delegate == null) {
             delegate = GXRoundBorderDelegate()
@@ -273,12 +244,7 @@ open class GXImageView : AppCompatImageView, GXIImageView, GXIRelease {
             delegate = GXRoundBorderDelegate()
         }
         delegate?.setRoundCornerBorder(
-            borderColor,
-            borderWidth,
-            topLeft,
-            topRight,
-            bottomLeft,
-            bottomRight
+            borderColor, borderWidth, topLeft, topRight, bottomLeft, bottomRight
         )
     }
 

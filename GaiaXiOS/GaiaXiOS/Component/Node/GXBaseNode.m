@@ -69,12 +69,6 @@
         [self setupNormalBackground:view];
     }
     
-    //毛玻璃
-    NSString *backdropFilter = [styleInfo gx_stringForKey:@"backdrop-filter"];
-    if (backdropFilter.length) {
-        self.backdropFilter = backdropFilter;
-    }
-    
     //渐变色背景
     if (self.isSupportGradientBgColor) {
         NSString *backgroundImage = [styleInfo gx_stringForKey:@"background-image"];
@@ -371,6 +365,15 @@
         //不做处理
     }
     
+    //boxShadow
+    NSString *boxShadow = [styleInfo gx_stringForKey:@"box-shadow"];
+    if (boxShadow.length && self.isSupportShadow) {
+        self.boxShadow = boxShadow;
+        if (!isMark) {
+            [self setupShadow:view];
+        }
+    }
+    
     return isMark;
 }
 
@@ -536,8 +539,15 @@
     
     //判断是否存在
     if(effectView == nil){
-        UIBlurEffect *effect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleLight];
-        effectView = [[UIVisualEffectView alloc] initWithEffect:effect];
+        if (@available(iOS 10.0, *)) {
+            UIBlurEffect *effect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleRegular];
+            effectView = [[UIVisualEffectView alloc] initWithEffect:effect];
+        } else {
+            // Fallback on earlier versions
+            UIBlurEffect *effect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleLight];
+            effectView = [[UIVisualEffectView alloc] initWithEffect:effect];
+        }
+        effectView.backgroundColor = [UIColor colorWithWhite:0 alpha:0.25];
         [view insertSubview:effectView atIndex:0];
         view.blurView = effectView;
     }

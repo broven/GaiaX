@@ -9,7 +9,7 @@
 
 [![README-en](https://shields.io/badge/README-ENGLISH-blue)](README.md)
 [![README-zh](https://shields.io/badge/README-%E4%B8%AD%E6%96%87-blue)](README-ZH.md)
-[![Docs-zh](https://shields.io/badge/Docs-%E4%B8%AD%E6%96%87-blue?logo=Read%20The%20Docs)](https://www.yuque.com/biezhihua/gaiax)
+[![Docs-zh](https://shields.io/badge/Docs-%E4%B8%AD%E6%96%87-blue?logo=Read%20The%20Docs)](https://youku-gaiax.github.io/)
 [![GitHub release](https://img.shields.io/github/release/alibaba/GaiaX)](https://github.com/alibaba/GaiaX/releases)
 [![GitHub Stars](https://img.shields.io/github/stars/alibaba/GaiaX)](https://github.com/alibaba/GaiaX/stargazers)
 [![GitHub Forks](https://img.shields.io/github/forks/alibaba/GaiaX)](https://github.com/alibaba/GaiaX/fork)
@@ -90,8 +90,8 @@ allprojects {
 
 Android-Support version:
 ```
-implementation 'com.github.alibaba.GaiaX:GaiaX-Adapter:$version-support'
-implementation 'com.github.alibaba.GaiaX:GaiaX:$version-support'
+implementation 'com.github.alibaba.GaiaX:GaiaX-Adapter:0.2.8-support'
+implementation 'com.github.alibaba.GaiaX:GaiaX:0.2.8-support'
 implementation 'com.alibaba:fastjson:1.2.76'
 ```
 
