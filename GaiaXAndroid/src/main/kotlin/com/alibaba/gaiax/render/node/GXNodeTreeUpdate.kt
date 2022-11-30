@@ -16,9 +16,9 @@
 
 package com.alibaba.gaiax.render.node
 
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
 import android.view.View
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import app.visly.stretch.Dimension
 import app.visly.stretch.Display
 import app.visly.stretch.PositionType

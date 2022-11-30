@@ -28,8 +28,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewOutlineProvider
 import android.widget.AbsoluteLayout
-import androidx.annotation.Keep
-import androidx.annotation.RequiresApi
+import android.support.annotation.Keep
+import android.support.annotation.RequiresApi
 import com.alibaba.fastjson.JSONObject
 import com.alibaba.gaiax.context.GXTemplateContext
 import com.alibaba.gaiax.render.utils.GXAccessibilityUtils

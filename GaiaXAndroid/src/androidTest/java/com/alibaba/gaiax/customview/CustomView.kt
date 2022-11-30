@@ -2,7 +2,7 @@ package com.alibaba.gaiax.customview
 
 import android.content.Context
 import android.view.View
-import androidx.annotation.Keep
+import android.support.annotation.Keep
 import com.alibaba.fastjson.JSONObject
 import com.alibaba.gaiax.GXTemplateEngine
 

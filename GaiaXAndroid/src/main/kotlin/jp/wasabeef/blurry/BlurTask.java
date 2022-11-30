@@ -5,9 +5,8 @@ import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.RequiresApi;
 import android.view.View;
-
-import androidx.annotation.RequiresApi;
 
 import java.lang.ref.WeakReference;
 import java.util.concurrent.ExecutorService;

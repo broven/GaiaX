@@ -29,8 +29,8 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewOutlineProvider
 import android.widget.FrameLayout
-import androidx.annotation.Keep
-import androidx.viewpager.widget.ViewPager
+import android.support.annotation.Keep
+import android.support.v4.view.ViewPager
 import com.alibaba.fastjson.JSONObject
 import com.alibaba.gaiax.context.GXTemplateContext
 import com.alibaba.gaiax.render.view.GXIRootView

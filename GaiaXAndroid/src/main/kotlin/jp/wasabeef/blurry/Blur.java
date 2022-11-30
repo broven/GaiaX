@@ -13,9 +13,9 @@ import android.renderscript.Element;
 import android.renderscript.RSRuntimeException;
 import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicBlur;
+import android.support.annotation.RequiresApi;
 import android.view.View;
 
-import androidx.annotation.RequiresApi;
 
 /**
  * Copyright (C) 2020 Wasabeef

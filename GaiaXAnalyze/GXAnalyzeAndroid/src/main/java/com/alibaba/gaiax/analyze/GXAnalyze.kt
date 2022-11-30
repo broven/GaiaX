@@ -1,6 +1,6 @@
 package com.alibaba.gaiax.analyze
 
-import androidx.annotation.Keep
+import android.support.annotation.Keep
 import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
 

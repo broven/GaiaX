@@ -21,8 +21,8 @@ import android.graphics.*
 import android.os.Build
 import android.util.AttributeSet
 import android.widget.AbsoluteLayout
-import androidx.annotation.Keep
-import androidx.annotation.RequiresApi
+import android.support.annotation.Keep
+import android.support.annotation.RequiresApi
 import com.alibaba.gaiax.render.view.basic.boxshadow.GXBlurMaskBitmapShadowDrawable
 import com.alibaba.gaiax.render.view.basic.boxshadow.GXBlurMaskShadowDrawable
 import com.alibaba.gaiax.render.view.basic.boxshadow.GXShadowDrawable
