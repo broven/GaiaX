@@ -1,11 +1,12 @@
-#gx-slider-item {
+#template_slider_item_size_aspect_ratio {
   width: 100%;
 }
 
 #image {
   width: 100%;
+  aspect-ratio: 1;
   mode: aspectFill;
-  aspect-ratio: 1.777;
+  border-radius: 10px;
 }
 
 #title {
@@ -15,5 +16,5 @@
   fit-content: true;
   position: absolute;
   bottom: 10px;
-  left: 5%;
+  left: 10%;
 }
