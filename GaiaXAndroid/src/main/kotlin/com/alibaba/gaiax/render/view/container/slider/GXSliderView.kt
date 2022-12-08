@@ -23,7 +23,6 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.AttributeSet
-import android.util.Log
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
@@ -33,9 +32,7 @@ import android.support.annotation.Keep
 import android.support.v4.view.ViewPager
 import com.alibaba.fastjson.JSONObject
 import com.alibaba.gaiax.context.GXTemplateContext
-import com.alibaba.gaiax.render.view.GXIRootView
-import com.alibaba.gaiax.render.view.GXIRoundCorner
-import com.alibaba.gaiax.render.view.GXIViewBindData
+import com.alibaba.gaiax.render.view.*
 import com.alibaba.gaiax.render.view.drawable.GXRoundCornerBorderGradientDrawable
 import com.alibaba.gaiax.template.GXSliderConfig
 import java.util.*
@@ -44,7 +41,8 @@ import java.util.*
  * @suppress
  */
 @Keep
-class GXSliderView : FrameLayout, GXIViewBindData, GXIRootView, GXIRoundCorner {
+class GXSliderView : FrameLayout, GXIContainer, GXIViewBindData, GXIRootView,
+    GXIRoundCorner, GXIRelease, GXIViewVisibleChange {
 
     enum class IndicatorPosition(val value: String) {
         TOP_LEFT("top-left"),
@@ -128,6 +126,10 @@ class GXSliderView : FrameLayout, GXIViewBindData, GXIRootView, GXIRoundCorner {
     }
 
     private fun initIndicator() {
+        if (indicatorView != null) {
+            removeView(indicatorView)
+        }
+
         indicatorView = createIndicatorView()
 
         val layoutParams = LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
@@ -172,7 +174,6 @@ class GXSliderView : FrameLayout, GXIViewBindData, GXIRootView, GXIRoundCorner {
                     return customIndicatorView
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "create custom indicator class fail, class:$it")
                 e.printStackTrace()
             }
         }
@@ -194,14 +195,19 @@ class GXSliderView : FrameLayout, GXIViewBindData, GXIRootView, GXIRoundCorner {
     }
 
     override fun onBindData(data: JSONObject?) {
+        stopTimer()
+
         viewPager?.adapter?.notifyDataSetChanged()
+
         config?.selectedIndex?.let {
             viewPager?.adapter?.count?.let { count ->
                 if (it in 0 until count) {
                     viewPager?.setCurrentItem(it, false)
+                    indicatorView?.updateSelectedIndex(it)
                 }
             }
         }
+
         startTimer()
     }
 
@@ -211,6 +217,8 @@ class GXSliderView : FrameLayout, GXIViewBindData, GXIRootView, GXIRoundCorner {
     }
 
     private fun startTimer() {
+        stopTimer()
+
         config?.scrollTimeInterval?.let {
             if (it > 0) {
                 timer = Timer()
@@ -283,6 +291,19 @@ class GXSliderView : FrameLayout, GXIViewBindData, GXIRootView, GXIRoundCorner {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 foreground = shape
             }
+        }
+    }
+
+    override fun release() {
+        indicatorView = null
+        stopTimer()
+    }
+
+    override fun onVisibleChanged(visible: Boolean) {
+        if (visible) {
+            startTimer()
+        } else {
+            stopTimer()
         }
     }
 }
