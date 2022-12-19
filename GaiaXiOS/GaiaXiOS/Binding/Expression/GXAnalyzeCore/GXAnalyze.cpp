@@ -766,21 +766,9 @@ GXATSNode GXAnalyze::doubleCalculate(GXATSNode left, GXATSNode right, string op)
             result.token = "null";
         } else {
             if ((left.token == "num" || left.token == "long") && right.token == "string") {
-//                if (left.name.find('.') != -1) {
-//                    regex e("0+?$");
-//                    regex e2("[.]$");
-//                    left.name = regex_replace(left.name, e, "");
-//                    left.name = regex_replace(left.name, e2, "");
-//                }
                 result.name = left.name + right.name;
                 result.token = "string";
             } else if ((right.token == "num" || right.token == "long") && left.token == "string") {
-//                if (right.name.find('.') != -1) {
-//                    regex e("0+?$");
-//                    regex e2("[.]$");
-//                    right.name = regex_replace(right.name, e, ""); // 除了捕捉到的组以外，其他的东西均舍弃
-//                    right.name = regex_replace(right.name, e2, ""); // 除了捕捉到的组以外，其他的东西均舍弃
-//                }
                 result.name = left.name + right.name;
                 result.token = "string";
             } else {
@@ -1021,8 +1009,16 @@ long GXAnalyze::getValue(string expression, void *source) {
                 if (gxv->tag == GX_TAG_FLOAT) {
                     tokenNum.name = to_string(gxv->float64);
                     if (tokenNum.name.find('.') != -1) {
-                        tokenNum.name = regex_replace(tokenNum.name, regex("0+?$"), ""); // 除了捕捉到的组以外，其他的东西均舍弃
-                        tokenNum.name = regex_replace(tokenNum.name, regex("[.]$"), ""); // 除了捕捉到的组以外，其他的东西均舍弃
+                        for (int ln = tokenNum.name.length() - 1; ln >= 0; ln--) {
+                            if (tokenNum.name[ln] == '0') {
+                                tokenNum.name[ln] = '\0';
+                            } else if (tokenNum.name[ln] == '.') {
+                                tokenNum.name[ln] = '\0';
+                                break;
+                            } else {
+                                break;
+                            }
+                        }
                     }
                     tokenNum.token = "num";
                 } else if (gxv->tag == GX_TAG_LONG) {
@@ -1059,8 +1055,16 @@ long GXAnalyze::getValue(string expression, void *source) {
                 if (gxv->tag == GX_TAG_FLOAT) {
                     tokenNum.name = to_string(gxv->float64);
                     if (tokenNum.name.find('.') != -1) {
-                        tokenNum.name = regex_replace(tokenNum.name, regex("0+?$"), ""); // 除了捕捉到的组以外，其他的东西均舍弃
-                        tokenNum.name = regex_replace(tokenNum.name, regex("[.]$"), ""); // 除了捕捉到的组以外，其他的东西均舍弃
+                        for (int ln = tokenNum.name.length() - 1; ln >= 0; ln--) {
+                            if (tokenNum.name[ln] == '0') {
+                                tokenNum.name[ln] = '\0';
+                            } else if (tokenNum.name[ln] == '.') {
+                                tokenNum.name[ln] = '\0';
+                                break;
+                            } else {
+                                break;
+                            }
+                        }
                     }
                     tokenNum.token = "num";
                 } else if (gxv->tag == GX_TAG_LONG) {
@@ -1123,12 +1127,6 @@ long GXAnalyze::getValue(string expression, void *source) {
                     pointer = new GXValue(GX_TAG_BOOL, 0);
                 }
             } else if (res.token == "num") {
-//                if (res.name.find('.') != -1) {
-//                    regex e("0+?$");
-//                    regex e2("[.]$");
-//                    res.name = regex_replace(res.name, e, "");
-//                    res.name = regex_replace(res.name, e2, "");
-//                }
                 pointer = new GXValue(GX_TAG_FLOAT, (float) atof(res.name.c_str()));
             } else if (res.token == "long") {
                 pointer = new GXValue(GX_TAG_LONG, (int64_t) atoll(res.name.c_str()));
@@ -1316,8 +1314,16 @@ GXAnalyze::calculateCache(string cacheString, vector<GXATSNode> array, void *p_a
                 if (fun->tag == GX_TAG_FLOAT) {
                     node.name = to_string(fun->float64);
                     if (node.name.find('.') != -1) {
-                        node.name = regex_replace(node.name, regex("0+?$"), ""); // 除了捕捉到的组以外，其他的东西均舍弃
-                        node.name = regex_replace(node.name, regex("[.]$"), ""); // 除了捕捉到的组以外，其他的东西均舍弃
+                        for (int ln = node.name.length() - 1; ln >= 0; ln--) {
+                            if (node.name[ln] == '0') {
+                                node.name[ln] = '\0';
+                            } else if (node.name[ln] == '.') {
+                                node.name[ln] = '\0';
+                                break;
+                            } else {
+                                break;
+                            }
+                        }
                     }
                     node.token = "num";
                 } else if (fun->tag == GX_TAG_LONG) {
@@ -1377,12 +1383,6 @@ GXAnalyze::calculateCache(string cacheString, vector<GXATSNode> array, void *p_a
             pointer = new GXValue(GX_TAG_BOOL, 0);
         }
     } else if (res.token == "num") {
-//        if (res.name.find('.') != -1) {
-//            regex e("0+?$");
-//            regex e2("[.]$");
-//            res.name = regex_replace(res.name, e, "");
-//            res.name = regex_replace(res.name, e2, "");
-//        }
         pointer = new GXValue(GX_TAG_FLOAT, (float) atof(res.name.c_str()));
     } else if (res.token == "long") {
         pointer = new GXValue(GX_TAG_LONG, (int64_t) atoll(res.name.c_str()));
@@ -1446,12 +1446,6 @@ long GXAnalyze::check(string s, vector<GXATSNode> array, void *p_analyze, void *
                     pointer = new GXValue(GX_TAG_BOOL, 0);
                 }
             } else if (valueStack[0].token == "num") {
-//                if (valueStack[0].name.find('.') != -1) {
-//                    regex e("0+?$");
-//                    regex e2("[.]$");
-//                    valueStack[0].name = regex_replace(valueStack[0].name, e, "");
-//                    valueStack[0].name = regex_replace(valueStack[0].name, e2, "");
-//                }
                 pointer = new GXValue(GX_TAG_FLOAT, (float) atof(valueStack[0].name.c_str()));
             } else if (valueStack[0].token == "long") {
                 pointer = new GXValue(GX_TAG_LONG, (int64_t) atoll(valueStack[0].name.c_str()));
@@ -1503,8 +1497,16 @@ long GXAnalyze::check(string s, vector<GXATSNode> array, void *p_analyze, void *
                     if (gxv->tag == GX_TAG_FLOAT) {
                         t1.name = to_string(gxv->float64);
                         if (t1.name.find('.') != -1) {
-                            t1.name = regex_replace(t1.name, regex("0+?$"), ""); // 除了捕捉到的组以外，其他的东西均舍弃
-                            t1.name = regex_replace(t1.name, regex("[.]$"), ""); // 除了捕捉到的组以外，其他的东西均舍弃
+                            for (int ln = t1.name.length() - 1; ln >= 0; ln--) {
+                                if (t1.name[ln] == '0') {
+                                    t1.name[ln] = '\0';
+                                } else if (t1.name[ln] == '.') {
+                                    t1.name[ln] = '\0';
+                                    break;
+                                } else {
+                                    break;
+                                }
+                            }
                         }
                         t1.token = "num";
                     } else if (gxv->tag == GX_TAG_LONG) {
@@ -1544,8 +1546,16 @@ long GXAnalyze::check(string s, vector<GXATSNode> array, void *p_analyze, void *
                     if (gxv->tag == GX_TAG_FLOAT) {
                         t1.name = to_string(gxv->float64);
                         if (t1.name.find('.') != -1) {
-                            t1.name = regex_replace(t1.name, regex("0+?$"), ""); // 除了捕捉到的组以外，其他的东西均舍弃
-                            t1.name = regex_replace(t1.name, regex("[.]$"), ""); // 除了捕捉到的组以外，其他的东西均舍弃
+                            for (int ln = t1.name.length() - 1; ln >= 0; ln--) {
+                                if (t1.name[ln] == '0') {
+                                    t1.name[ln] = '\0';
+                                } else if (t1.name[ln] == '.') {
+                                    t1.name[ln] = '\0';
+                                    break;
+                                } else {
+                                    break;
+                                }
+                            }
                         }
                         t1.token = "num";
                     } else if (gxv->tag == GX_TAG_LONG) {
@@ -1684,8 +1694,17 @@ long GXAnalyze::check(string s, vector<GXATSNode> array, void *p_analyze, void *
                                         if (fun->tag == GX_TAG_FLOAT) {
                                             tempR.name = to_string(fun->float64);
                                             if (tempR.name.find('.') != -1) {
-                                                tempR.name = regex_replace(tempR.name, regex("0+?$"), ""); // 除了捕捉到的组以外，其他的东西均舍弃
-                                                tempR.name = regex_replace(tempR.name, regex("[.]$"), ""); // 除了捕捉到的组以外，其他的东西均舍弃
+                                                for (int ln = tempR.name.length() - 1;
+                                                     ln >= 0; ln--) {
+                                                    if (tempR.name[ln] == '0') {
+                                                        tempR.name[ln] = '\0';
+                                                    } else if (tempR.name[ln] == '.') {
+                                                        tempR.name[ln] = '\0';
+                                                        break;
+                                                    } else {
+                                                        break;
+                                                    }
+                                                }
                                             }
                                             tempR.token = "num";
                                         } else if (fun->tag == GX_TAG_LONG) {
